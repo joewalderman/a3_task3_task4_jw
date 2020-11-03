@@ -1,0 +1,93 @@
+---
+title: "a3_task4_jw"
+author: "Joe Walderman"
+date: "11/2/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(janitor)
+library(here)
+library(lubridate)
+```
+
+# In this document I will be comparing the mean size of purple urchins in sections of Naples Reef in January 2010 based on whether or not kelp removal took place.
+
+
+## 1. Reading in the data
+
+```{r}
+urchins <- read_csv(here("data", "urchins.csv")) %>%
+  clean_names()
+```
+## 2. Data wrangling
+
+```{r}
+urchins_naples <- urchins %>% 
+  mutate(date_new = mdy(date),
+         year = year(date_new),
+         month = month(date_new)) %>%
+  filter(site == "NAPL",
+         year == 2010,
+         month == 1)
+```
+
+## 3. Plotting size distributions
+
+```{r}
+ggplot(urchins_naples, aes(x = size)) +
+  geom_histogram(bins = 15) +
+  facet_wrap(~treatment)
+
+ggplot(urchins_naples, aes(sample = size)) +
+  geom_qq() +
+  facet_wrap(~treatment)
+  
+```
+
+
+The QQ-plot correlates linearity in the plot to normal distribution. The more linear the plot is, the closer the distribution is to normal.
+1-2 sentences describing main takeaways about distribution of urchin sizes for each group
+
+## 4. Summary statistics
+
+```{r}
+urchins_stats <- urchins_naples %>%
+  group_by(treatment) %>% 
+  summarize(mean_size = mean(size),
+            sd_size = sd(size),
+            sample_size = n())
+
+urchins_stats
+```
+
+Sample size for both samples is greater than 30 so I feel comfortable using a t-test as a mechanism for comparison. 
+
+## 5. Pulling into vectors
+
+#### Here I use the pull() function to creat a vector format of size obervations grouped by treatment. I want this in vector format so that I can use it in my two-sample t-test
+
+```{r}
+annual_sample <- urchins_naples %>% 
+  filter(treatment == "ANNUAL") %>% 
+  pull(size)
+
+control_sample <- urchins_naples %>% 
+  filter(treatment == "CONTROL") %>% 
+  pull(size)
+```
+
+## 6. Two-sample t-test
+
+```{r}
+t.test(annual_sample, control_sample)
+```
+
+The most important information here is the means of the two samples and the difference between the two of them. The p-value, however, is helpful in describing the percent chance of randomly selecting two samples from populations with the same mean that are this different by chance. The p-value of 0.3063 means that there is a 30.63 percent probability that one might have found samples with means that are at least as different as these two by random chance, if they are drawn from populations with the same mean, which is fairly likely. This is reflected in the closeness of the sample means, meaning there is less evidence of difference between population means. 
+
+
+
+
+
