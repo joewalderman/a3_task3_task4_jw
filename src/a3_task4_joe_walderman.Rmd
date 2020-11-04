@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 library(tidyverse)
 library(janitor)
 library(here)
@@ -24,6 +24,8 @@ urchins <- read_csv(here("data", "urchins.csv")) %>%
 ```
 ## 2. Data wrangling
 
+#### I use `mdy()` within `mutate()` to add a `date_new` column in the "Date" class. Then, I create new columns that contain only the year and month components of date for each row using the `year()` and `month()` functions. Finally, I use `filter()` to include only observations collected from Naples Reef in January 2010: 
+
 ```{r}
 urchins_naples <- urchins %>% 
   mutate(date_new = mdy(date),
@@ -32,13 +34,15 @@ urchins_naples <- urchins %>%
   filter(site == "NAPL",
          year == 2010,
          month == 1)
+
+class(urchins_naples$date_new) #using `class()` to confirm that date_new is in the "Date" class
 ```
 
 ## 3. Plotting size distributions
 
 ```{r}
 ggplot(urchins_naples, aes(x = size)) +
-  geom_histogram(bins = 15) +
+  geom_histogram(bins = 20) +
   facet_wrap(~treatment)
 
 ggplot(urchins_naples, aes(sample = size)) +
@@ -48,7 +52,7 @@ ggplot(urchins_naples, aes(sample = size)) +
 ```
 
 
-The QQ-plot correlates linearity in the plot to normal distribution. The more linear the plot is, the closer the distribution is to normal.
+The QQ-plots the acctual values for the observations vs theoretical values if they were perfectly drawn from a normal distribution. It correlates linearity in the plot to normal distribution. The more linear the plot is, the closer the distribution is to normal. These QQ-plots indicate that the Annual group distribution is closer to normality than the Control group. The histograms also point to the the Control group being skewed to the left and less normal.
 1-2 sentences describing main takeaways about distribution of urchin sizes for each group
 
 ## 4. Summary statistics
@@ -64,6 +68,9 @@ urchins_stats
 ```
 
 Sample size for both samples is greater than 30 so I feel comfortable using a t-test as a mechanism for comparison. 
+
+
+
 
 ## 5. Pulling into vectors
 
@@ -85,7 +92,15 @@ control_sample <- urchins_naples %>%
 t.test(annual_sample, control_sample)
 ```
 
-The most important information here is the means of the two samples and the difference between the two of them. The p-value, however, is helpful in describing the percent chance of randomly selecting two samples from populations with the same mean that are this different by chance. The p-value of 0.3063 means that there is a 30.63 percent probability that one might have found samples with means that are at least as different as these two by random chance, if they are drawn from populations with the same mean, which is fairly likely. This is reflected in the closeness of the sample means, meaning there is less evidence of difference between population means. 
+```{r}
+pct_dif(mean(control_sample), mean(annual_sample))
+actual_dif(mean(control_sample), mean(annual_sample))
+```
+
+
+The most important information here is the means of the two samples and the difference between the two of them. The p-value, however, is helpful in describing the percent chance of randomly selecting two samples from populations with the same mean that are this different by chance. The p-value of 0.3063 means that there is a 30.63 percent probability that one might have found samples with means that are at least as different as these two by random chance, if they are drawn from populations with the same mean, which is fairly likely. This is reflected in the closeness of the sample means, meaning there is less evidence of difference between population means. The percent difference in mean size here (4.3%) is very small in comparison to the percent difference in mean size between purple and red urchins. This, combined with the **relatively** high p-value suggests that there is not a significant impact on size by kelp removal in this situation.
+
+
 
 
 

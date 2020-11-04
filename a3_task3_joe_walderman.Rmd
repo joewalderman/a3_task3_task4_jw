@@ -1,0 +1,17 @@
+---
+title: "a3_task3_joe_walderman"
+author: "Joe Walderman"
+date: "11/1/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+## 1. Reading in the data
+
+```{r}
+urchins <- read_csv("urchins.csv")
+```
+
