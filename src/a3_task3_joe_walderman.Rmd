@@ -5,15 +5,17 @@ date: "11/1/2020"
 output: html_document
 ---
 
-```{r setup, include=FALSE, echo = TRUE, message = FALSE, warning = FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 library(tidyverse)
 library(janitor)
 library(kableExtra)
 library(here)
 library(lubridate)
 ```
-## 1. Reading in and cleaning the data
+# Exploring and Analysizng Urchin Population Data Collected along the Santa Barbara Coast
+
+## Reading in and cleaning the data
 
 ```{r}
 urchins <- read_csv(here("data", "urchins.csv")) %>% 
@@ -22,41 +24,53 @@ urchins <- read_csv(here("data", "urchins.csv")) %>%
 
 ## Section 1: Comparing sizes of purple and and red sea urchins
 
-#### i. Exploratory Data Visualization: Here I will be creating two graphs to compare the size distribution between purple and red sea urchins.
+### a. Exploratory Data Visualization: Here I will be creating two graphs to compare the size distribution between purple and red sea urchins. I use facet_wrap to create and compare two seperate histogram size distributions for earch type of urchin. I also create a boxplot.
 
 ```{r}
 ggplot(urchins, aes(x = size)) +
   geom_histogram() +
   labs(x = "Size (cm)",
-       y = "Urchins") +
+       y = "Common Name") +
   facet_wrap(~common_name)
 
 ggplot(urchins, aes(x = common_name, y = size)) +
   geom_boxplot() +
-  labs(x = "Urchins",
+  labs(x = "Common Name",
        y = "Size (cm)")
 ```
 
-#### ii. Here I use the group_by() and summarize() functions to create a table with summary statistics for the two types of urchins.
+### ii. Descriptive Statistics Table: Here I use the group_by() and summarize() functions to create a table with summary statistics for the two types of urchins. I also create my own function to find the percent differnece in mean to include in the summary statistics. Additionally, I use styling from the kableExtra package. 
 
 ```{r}
+pct_dif <- function(mean_1, mean_2) {(mean_2 - mean_1)/mean_1}
+
 urchins_dist <- urchins %>% 
   group_by(common_name) %>% 
   summarize(mean_size = mean(size, na.rm = TRUE),
             median = median(size, na.rm = TRUE),
             sd = sd(size, na.rm = TRUE),
-            sample_size = n())
-           
+            sample_size = n(),)
+
+kbl(urchins_dist) %>% 
+  kable_styling(full_width = FALSE, "hover")
+          
 
 urchins_dist
 ```
 
-#### iii. (Paragraph description)
+```{r}
+pct_dif(4.469797, 6.776489)
+```
+
+
+#### iii. Based on the data exploration that I have done there are a number of takeaways. Looking at the histograms and summary stats red urchins have a larger mean size. The standard deviation and histograms indicate that red urchincs also have a greater spread, covering a greater range of sizes that purple urchins despite a smaller sample size. The distribution of purple urchins is concentrated more upon the mean, represented by a taller histogram "curve" and 
 
 
 ## Section 2: Exploring counts of purple urchins based on site and year collected.
 
-#### i. Creating a new subset with additional clearer columns for collection site and year
+#### i. New Subset: Here I create a new subset for observations only of the purple sea urchin. I clean up the data by correctly classifying the date information through the `lubridate()` package, and implement a `case_when` to populate a new column expanding the abbreviations for site.
+
+
 
 ```{r}
 purple_urchins <- urchins %>% 
@@ -66,16 +80,19 @@ purple_urchins <- urchins %>%
   mutate(site_full = case_when(
     site == "NAPL" ~ "Naples Reef",
     site == "AQUE" ~ "Arroyo Quemado Reef",
+    site == "CARP" ~ "Carpinteria Reef",
     site == "MOHK" ~ "Mohawk Reef",
     site == "IVEE" ~ "Isla Vista Reef"
   ))
+
+class(purple_urchins$date_new)
 ```
 
-#### ii. Summary table for total numebr of purple urchins by site and year
+#### ii. Summary table for total number of purple urchins by site and year
 
 ```{r}
 purple_urchins_table <- purple_urchins %>%
-  group_by(year, site) %>% # **Find a way to fix the NA rows**
+  group_by(site_full, year) %>%
   count()
 
 purple_urchins_table
@@ -84,7 +101,10 @@ purple_urchins_table
 #### iii. Exploratory graph: purple urchin counts at each site over time.
 
 ```{r}
-ggplot(purple_urchins_table, aes(x = year, y = n, color = site)) +
-  geom_line(width = 10)
+ggplot(purple_urchins_table, aes(x = year, y = n, fill = site_full)) +
+  geom_col(aes(width = .8)) +
+  facet_wrap(~site_full) +
+  theme(legend.position = "FALSE", axis.text.x = element_text(angle = 90)) +
+  labs(x = "Year", y = "Count")
 ```
 
