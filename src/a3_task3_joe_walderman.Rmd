@@ -28,9 +28,9 @@ urchins <- read_csv(here("data", "urchins.csv")) %>%
 
 ```{r}
 ggplot(urchins, aes(x = size)) +
-  geom_histogram() +
+  geom_histogram(bins = 20) +
   labs(x = "Size (cm)",
-       y = "Common Name") +
+       y = "Count") +
   facet_wrap(~common_name)
 
 ggplot(urchins, aes(x = common_name, y = size)) +
@@ -42,14 +42,15 @@ ggplot(urchins, aes(x = common_name, y = size)) +
 ### ii. Descriptive Statistics Table: Here I use the group_by() and summarize() functions to create a table with summary statistics for the two types of urchins. I also create my own function to find the percent differnece in mean to include in the summary statistics. Additionally, I use styling from the kableExtra package. 
 
 ```{r}
-pct_dif <- function(mean_1, mean_2) {(mean_2 - mean_1)/mean_1}
+pct_dif <- function(mean_1, mean_2) {(mean_2 - mean_1)/((mean_2 + mean_1)/2)}
+actual_dif <- function(mean_1, mean_2) {mean_2 - mean_1}
 
 urchins_dist <- urchins %>% 
   group_by(common_name) %>% 
   summarize(mean_size = mean(size, na.rm = TRUE),
-            median = median(size, na.rm = TRUE),
-            sd = sd(size, na.rm = TRUE),
-            sample_size = n(),)
+            median_size = median(size, na.rm = TRUE),
+            sd_size = sd(size, na.rm = TRUE),
+            sample_size = n())
 
 kbl(urchins_dist) %>% 
   kable_styling(full_width = FALSE, "hover")
@@ -60,10 +61,11 @@ urchins_dist
 
 ```{r}
 pct_dif(4.469797, 6.776489)
+actual_dif(4.469797, 6.776489)
 ```
 
 
-#### iii. Based on the data exploration that I have done there are a number of takeaways. Looking at the histograms and summary stats red urchins have a larger mean size. The standard deviation and histograms indicate that red urchincs also have a greater spread, covering a greater range of sizes that purple urchins despite a smaller sample size. The distribution of purple urchins is concentrated more upon the mean, represented by a taller histogram "curve" and 
+#### iii. Based on the data exploration that I have done there are a number of takeaways. Looking at the histograms and summary stats red urchins have a larger mean size. The standard deviation and histograms indicate that red urchincs also have a greater spread, covering a greater range of sizes that purple urchins despite a smaller sample size. The distribution of purple urchins is concentrated more upon the mean, represented by a taller histogram "curve". Further, my percent difference and actual difference functions suggest that on average red urchins are 2.31cm or 41% larger in diameter than purple urchins.
 
 
 ## Section 2: Exploring counts of purple urchins based on site and year collected.
@@ -105,6 +107,6 @@ ggplot(purple_urchins_table, aes(x = year, y = n, fill = site_full)) +
   geom_col(aes(width = .8)) +
   facet_wrap(~site_full) +
   theme(legend.position = "FALSE", axis.text.x = element_text(angle = 90)) +
-  labs(x = "Year", y = "Count")
+  labs(x = "Year", y = "Urchin Count")
 ```
 
